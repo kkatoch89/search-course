@@ -1,0 +1,15 @@
+# Corpora & embeddings — large, regenerated via setup_data.py
+data/*
+!data/README.md
+
+# The engine keeps its own git repo + tag history (end-of-mN snapshots)
+exercises/wikisearch/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Local tooling / OS
+.claude/settings.local.json
+.DS_Store

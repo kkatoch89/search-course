@@ -1,0 +1,6 @@
+# Module 3 — Chunking & idempotency (satellite, standalone from the engine)
+# Only needs to read the shared 5k parquet. No embedding model here — the
+# "embedder" is a stub that counts calls, because this module's lesson is
+# avoiding redundant embed calls, not computing vectors (you did that in M2).
+pandas>=2.0
+pyarrow>=14
