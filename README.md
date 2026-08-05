@@ -1,4 +1,4 @@
-# Search & Retrieval — Self-Paced Course
+# Search & Retrieval
 
 A 16-week course on full-text + semantic + AI-augmented search, grounded in
 the production implementation in `chunky-kong/lib/instinct/search/universal/`
