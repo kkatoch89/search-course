@@ -75,8 +75,15 @@ def chunk_fixed(tokens: list[str], size: int, overlap: int) -> list[list[str]]:
          (start + size >= len(tokens)) — otherwise the overlap keeps emitting
          ever-shorter tail windows past the end.
     """
-    raise NotImplementedError("Implement chunk_fixed (see sub-steps above).")
 
+    step = size - overlap
+
+    result = []
+    for i in range(0, len(tokens), step):
+        result.append(tokens[i : i + size])
+        if i + size >= len(tokens):
+            break
+    return result
 
 @dataclass
 class Chunk:
@@ -115,8 +122,8 @@ def content_hash(text: str) -> str:
       2. Hash it and return the hex digest:
          ``hashlib.sha256(<bytes>).hexdigest()``.
     """
-    raise NotImplementedError("Implement content_hash (see sub-steps above).")
-
+    encoded_string = text.encode("utf-8")
+    return hashlib.sha256(encoded_string).hexdigest()
 
 def embed_new_chunks(chunk_texts: list[str], cache: dict, embedder) -> int:
     """Embed only the chunks we haven't embedded before. Return how many we did.
@@ -139,4 +146,12 @@ def embed_new_chunks(chunk_texts: list[str], cache: dict, embedder) -> int:
          skip that makes re-runs free.)
       4. Return ``new``.
     """
-    raise NotImplementedError("Implement embed_new_chunks (see sub-steps above).")
+    new = 0
+    for chunk_text in chunk_texts:
+        hash = content_hash(chunk_text)
+
+        if hash not in cache:
+            cache[hash] = embedder.embed(chunk_text)
+            new += 1
+
+    return new
