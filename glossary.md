@@ -30,8 +30,8 @@ rephrasing is the point.
 ## Hybrid search
 
 - **Hybrid retrieval** —
-- **Score normalization** —
-- **Reciprocal rank fusion (RRF)** —
+- **Score normalization** — BM25 score could be 15 while Embedding score could be 0.48, if we didn't normalize the 2 scores, BM25 will dominate and make Embedding insiginifcant.
+- **Reciprocal rank fusion (RRF)** — Discards the raw scores of the BM25 & Embeddings but keeps the ranked list from both methods. It then uses a formula (`1 / (60 + rank_position)`) to calculate how much of a "vote" it has. The formula is applied on both the ranked lists and then added. The reason why the formula has a `60` in the denominator is to prevent higher ranks from dominating, it helps smoothen the curve.
 - **Reranking** —
 - **Over-fetching** —
 
