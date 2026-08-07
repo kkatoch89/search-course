@@ -5,21 +5,21 @@
 
 **Goal:** Add a second, smarter pass to WikiSearch: after Module 4's fast hybrid
 ranker narrows 5,000 docs to a short candidate list, a **cross-encoder** re-reads
-each candidate *alongside the query* and re-sorts them — the "retrieve then
+each candidate _alongside the query_ and re-sorts them — the "retrieve then
 rerank" pattern that powers modern search. ★ portfolio demo.
-**Time box:** ~2 hours &nbsp;|&nbsp; **Time spent:** _fill in_ &nbsp;|&nbsp; **Done when:** `python rerank_cli.py "how do plants make food from sunlight"` shows _Photosynthesis_ jump from #2 (hybrid) to **#1** after reranking — the article that actually answers the question rises to the top.
+**Time box:** ~2 hours &nbsp;|&nbsp; **Time spent:** 1.5h &nbsp;|&nbsp; **Done when:** `python rerank_cli.py "how do plants make food from sunlight"` shows _Photosynthesis_ jump from #2 (hybrid) to **#1** after reranking — the article that actually answers the question rises to the top.
 
 ---
 
 ## Where this fits (builds on Module 4)
 
 - **Module 4 gave you** a fast hybrid ranker that scans all 5,000 docs in
-  milliseconds using *cheap* signals: keyword overlap (BM25) and pre-computed
+  milliseconds using _cheap_ signals: keyword overlap (BM25) and pre-computed
   vector similarity. It's a great **retriever** — good at pulling a handful of
   plausible candidates out of thousands.
 - **The limit of cheap signals:** neither ranker ever looked at the query and a
-  document *together*. BM25 counts shared words; the vector score compares two
-  summaries (embeddings) that were computed *separately, in advance*. So hybrid
+  document _together_. BM25 counts shared words; the vector score compares two
+  summaries (embeddings) that were computed _separately, in advance_. So hybrid
   can rank a generic article above the one that precisely answers the question.
 - **This module adds:** a **rerank** pass — a slower, more accurate model that
   reads each (query, document) pair jointly and re-scores just the top
@@ -36,27 +36,27 @@ rerank" pattern that powers modern search. ★ portfolio demo.
 ## The idea in plain English
 
 1. **Two stages, two speeds.** Running the accurate-but-slow model over all
-   5,000 docs on every query would be far too slow. So you don't: a *cheap*
+   5,000 docs on every query would be far too slow. So you don't: a _cheap_
    ranker (Module 4 hybrid) first narrows 5,000 → ~50 candidates in
-   milliseconds, and the *expensive* model only re-scores those 50. Cheap-and-
+   milliseconds, and the _expensive_ model only re-scores those 50. Cheap-and-
    wide then accurate-and-narrow. This is how almost every serious search system
    is built.
 
 2. **Bi-encoder vs. cross-encoder — the key distinction.** Module 2's embedder
    is a **bi-encoder**: query → one vector, each document → its own vector,
-   *separately*, and you compare the vectors afterward. Fast, because you embed
+   _separately_, and you compare the vectors afterward. Fast, because you embed
    the docs once up front — but the model never sees the query and a document at
    the same time. A **cross-encoder** feeds the query and one document into the
    model **together** as a single input and reads out one relevance score.
-   Because it can weigh "does *this* passage actually answer *this* query?", it's
+   Because it can weigh "does _this_ passage actually answer _this_ query?", it's
    much more accurate — but it can't precompute anything, so it costs one model
-   call *per candidate, per query*. That's exactly why you only run it on the
+   call _per candidate, per query_. That's exactly why you only run it on the
    short candidate list, never the whole corpus.
 
 3. **The score is a raw relevance logit — only the order matters.** Unlike
    cosine (−1..1) or your normalized fusion scores (0..1), a cross-encoder
    returns an unbounded number that can be **negative**. Don't read it as a
-   probability. It exists only to *sort* the candidates. (You'll see #1 score
+   probability. It exists only to _sort_ the candidates. (You'll see #1 score
    `+2.07` while #3 scores `−1.6` in the example below — the negatives are fine.)
 
 ---
@@ -69,44 +69,44 @@ are its top 5, then what the cross-encoder does to them.
 
 **BEFORE — hybrid retriever order** (normalized fusion scores, 0..1):
 
-| rank | doc | score | |
-| :--: | --- | :---: | --- |
-| 1 | **Plant** | 0.851 | 🤔 generic — *about* plants, doesn't answer "how" |
-| 2 | Photosynthesis | 0.777 | ✅ the actual answer, but stuck at #2 |
-| 3 | Seed | 0.669 | 🤔 related, not the answer |
-| 4 | Tropical rainforest | 0.457 | 🤔 |
-| 5 | Food | 0.439 | ❌ matches the word "food" |
+| rank | doc                 | score |                                                   |
+| :--: | ------------------- | :---: | ------------------------------------------------- |
+|  1   | **Plant**           | 0.851 | 🤔 generic — _about_ plants, doesn't answer "how" |
+|  2   | Photosynthesis      | 0.777 | ✅ the actual answer, but stuck at #2             |
+|  3   | Seed                | 0.669 | 🤔 related, not the answer                        |
+|  4   | Tropical rainforest | 0.457 | 🤔                                                |
+|  5   | Food                | 0.439 | ❌ matches the word "food"                        |
 
 **AFTER — cross-encoder rerank** (raw relevance scores; note the negatives):
 
-| rank | doc | ce score | |
-| :--: | --- | :----: | --- |
-| 1 | **Photosynthesis** | 2.067 | ✅ promoted #2 → #1 |
-| 2 | Plant | 0.474 | ✅ still relevant, but demoted below the real answer |
-| 3 | Tree | −1.605 | ✅ pulled in from deeper in the candidates |
-| 4 | Carbon dioxide | −1.753 | ✅ a photosynthesis input — genuinely on-topic |
-| 5 | Seed | −1.787 | |
+| rank | doc                | ce score |                                                      |
+| :--: | ------------------ | :------: | ---------------------------------------------------- |
+|  1   | **Photosynthesis** |  2.067   | ✅ promoted #2 → #1                                  |
+|  2   | Plant              |  0.474   | ✅ still relevant, but demoted below the real answer |
+|  3   | Tree               |  −1.605  | ✅ pulled in from deeper in the candidates           |
+|  4   | Carbon dioxide     |  −1.753  | ✅ a photosynthesis input — genuinely on-topic       |
+|  5   | Seed               |  −1.787  |                                                      |
 
 **Why the reranked list is better:**
 
 - **It promotes the article that answers the question.** Hybrid ranked the
-  generic *Plant* above *Photosynthesis* — "plants" is a strong keyword and
-  vector match for the *topic*. But the query asks *how plants make food from
-  sunlight*, and the cross-encoder, reading query and passage together,
-  recognizes that *Photosynthesis* is what actually answers it. It floats to #1
+  generic _Plant_ above _Photosynthesis_ — "plants" is a strong keyword and
+  vector match for the _topic_. But the query asks _how plants make food from
+  sunlight_, and the cross-encoder, reading query and passage together,
+  recognizes that _Photosynthesis_ is what actually answers it. It floats to #1
   with a score (`2.067`) far clear of everything else.
-- **It reshapes the whole list, not just the top swap.** *Tree* and *Carbon
-  dioxide* — both genuinely tied to photosynthesis — are pulled up from deeper in
+- **It reshapes the whole list, not just the top swap.** _Tree_ and _Carbon
+  dioxide_ — both genuinely tied to photosynthesis — are pulled up from deeper in
   the 50 candidates, displacing "Tropical rainforest" and the bare keyword match
   "Food."
 - **The gap is legible.** #1 sits at `+2.07`; the rest drop off a cliff into
-  negatives. The cross-encoder is *confident* about the winner in a way the
+  negatives. The cross-encoder is _confident_ about the winner in a way the
   bunched-up fusion scores (0.85, 0.78, 0.67…) weren't.
 
 **Why this needed a cross-encoder and hybrid couldn't do it:** to hybrid,
 "Plant" and "Photosynthesis" look almost equally on-topic — both are dense with
-plant/sunlight/food words and vectors. Telling apart *the topic* from *the
-answer to the question* needs a model that reads the query and the passage
+plant/sunlight/food words and vectors. Telling apart _the topic_ from _the
+answer to the question_ needs a model that reads the query and the passage
 **together**. That's the one thing a bi-encoder structurally can't do, and the
 one thing a cross-encoder is for.
 
@@ -183,20 +183,20 @@ on-topic articles. That top swap is the whole module in one line.
   ```bash
   python rerank_cli.py "a large body of salt water"
   ```
-  Hybrid's BEFORE list puts *Table salt* at #1 (strong keyword/vector match for
-  "salt water" — but table salt isn't a body of water). Where does *Salt water*
-  land before vs. after reranking, and what happened to *Table salt*? _fill in_
+  Hybrid's BEFORE list puts _Table salt_ at #1 (strong keyword/vector match for
+  "salt water" — but table salt isn't a body of water). Where does _Salt water_
+  land before vs. after reranking, and what happened to _Table salt_? _fill in_
 - **Candidate depth.** Rerun the plants query with `--candidates 10` and then
   `--candidates 100`. Does the top result change? What are you trading when you
   rerank more candidates? _fill in_ &nbsp; _(hint: the cross-encoder runs once
   per candidate — time it.)_
-- **When rerank *hurts* (or can't help).** Try:
+- **When rerank _hurts_ (or can't help).** Try:
   ```bash
   python rerank_cli.py "a reptile that can change color"
   ```
-  There's no great answer in the 5k slice (no *Chameleon* article), so watch what
+  There's no great answer in the 5k slice (no _Chameleon_ article), so watch what
   the cross-encoder promotes. What does this tell you about the limit of
-  reranking — what can it *not* fix? _fill in_ &nbsp; _(A reranker only reorders
+  reranking — what can it _not_ fix? _fill in_ &nbsp; _(A reranker only reorders
   what retrieval already found. Garbage in, garbage out.)_
 
 ### 5. Commit & tag
@@ -226,16 +226,16 @@ Only after your CLI works. This one's a plot twist worth the click:
 
 - **File:** `chunky-kong` →
   `lib/instinct/search/universal/query/executor/retrieval.ex`
-- **Notice:** production has a two-stage retrieve-then-rerank shape *just like
-  yours* — the module doc (line 3, "vector rerank") and lines 5–8 describe the
+- **Notice:** production has a two-stage retrieve-then-rerank shape _just like
+  yours_ — the module doc (line 3, "vector rerank") and lines 5–8 describe the
   `:fts_then_vector` strategy: pass 1 runs FTS, then **"pass 2 runs a vector ANN
   rerank scoped to pass-1 candidate IDs,"** and **"pass 1 over-fetches
   (`limit * 2`) when reranking is expected so pass 2 has headroom."** That
   over-fetch-before-rerank is exactly your `--candidates 50`. **But the plot
-  twist:** production's "rerank" is *not* a cross-encoder — it's the same
+  twist:** production's "rerank" is _not_ a cross-encoder — it's the same
   bi-encoder vector similarity from Module 2, just applied to the narrowed FTS
   candidate set. (The `reranker.ex` you met in Module 4 then fuses the two
-  scores.) So production chose the *cheaper* reranker. Same two-stage **shape**,
+  scores.) So production chose the _cheaper_ reranker. Same two-stage **shape**,
   different pass-2 **model** — which sets up the open question below.
 
 ---

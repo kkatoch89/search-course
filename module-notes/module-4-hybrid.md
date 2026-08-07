@@ -6,7 +6,7 @@
 **Goal:** Make WikiSearch run BM25 and vector search _together_ and fuse their
 results into one ranking that's better than either alone — the first version of
 the engine you'd actually show someone. ★ portfolio demo.
-**Time box:** ~2–3 hours &nbsp;|&nbsp; **Time spent:** _fill in_ &nbsp;|&nbsp; **Done when:** `python hybrid_cli.py "big cat that lives in the jungle"` returns five big cats with _Leopard_ on top — and the keyword junk ("Canadian Broadcasting Corporation") that plain BM25 shows is gone.
+**Time box:** ~2–3 hours &nbsp;|&nbsp; **Time spent:** 1.5h &nbsp;|&nbsp; **Done when:** `python hybrid_cli.py "big cat that lives in the jungle"` returns five big cats with _Leopard_ on top — and the keyword junk ("Canadian Broadcasting Corporation") that plain BM25 shows is gone.
 
 ---
 
