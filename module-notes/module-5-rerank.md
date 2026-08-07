@@ -185,10 +185,10 @@ on-topic articles. That top swap is the whole module in one line.
   ```
   Hybrid's BEFORE list puts _Table salt_ at #1 (strong keyword/vector match for
   "salt water" — but table salt isn't a body of water). Where does _Salt water_
-  land before vs. after reranking, and what happened to _Table salt_? _fill in_
+  land before vs. after reranking, and what happened to _Table salt_? My answer: "Table salt" got moved to #3 due to the low semantic relevance compared to "Salt water", "Lake".
 - **Candidate depth.** Rerun the plants query with `--candidates 10` and then
   `--candidates 100`. Does the top result change? What are you trading when you
-  rerank more candidates? _fill in_ &nbsp; _(hint: the cross-encoder runs once
+  rerank more candidates? My answer: you're trading higher latency for better accuracy &nbsp; _(hint: the cross-encoder runs once
   per candidate — time it.)_
 - **When rerank _hurts_ (or can't help).** Try:
   ```bash
@@ -196,7 +196,7 @@ on-topic articles. That top swap is the whole module in one line.
   ```
   There's no great answer in the 5k slice (no _Chameleon_ article), so watch what
   the cross-encoder promotes. What does this tell you about the limit of
-  reranking — what can it _not_ fix? _fill in_ &nbsp; _(A reranker only reorders
+  reranking — what can it _not_ fix? &nbsp; _(A reranker only reorders
   what retrieval already found. Garbage in, garbage out.)_
 
 ### 5. Commit & tag
