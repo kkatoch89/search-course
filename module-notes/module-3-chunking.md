@@ -6,7 +6,7 @@
 **Goal:** Prepare articles for embedding the way real ingestion pipelines do —
 split long ones into overlapping chunks, and use a content hash so re-processing
 unchanged articles costs nothing.
-**Time box:** ~2 hours &nbsp;|&nbsp; **Time spent:** _fill in_ &nbsp;|&nbsp; **Done when:** `python chunk_cli.py` reports **`0` embeddings** on its second run (`idempotent ✓`).
+**Time box:** ~2 hours  |  **Time spent:** _1.5h_  |  **Done when:** `python chunk_cli.py` reports `0` **embeddings** on its second run (`idempotent ✓`).
 
 > **Note — this is a _satellite_, not the engine.** Modules 1 and 2 grew the
 > `wikisearch` engine. This module is a standalone folder
@@ -31,7 +31,7 @@ unchanged articles costs nothing.
      little each day. Re-embedding all 5k (or 226k) articles on every sync burns
      time and, with a paid model, money — to recompute vectors that didn't change.
 - **This module adds:** **chunking** (split each article into embeddable pieces
-  *before* embedding) and **content-hash idempotency** (skip any piece whose
+  _before_ embedding) and **content-hash idempotency** (skip any piece whose
   text hasn't changed).
 - **New words:** chunk, chunk size, overlap, content hash / digest, idempotency.
 
@@ -42,12 +42,10 @@ unchanged articles costs nothing.
 1. **Split long text into fixed-size windows of tokens.** Pick a size (say 500
    tokens) and cut the article into consecutive windows of that size. Each window
    becomes one chunk, gets its own embedding, and is retrieved on its own.
-
 2. **Let consecutive windows overlap.** If you cut cleanly at token 500, a
    sentence straddling that boundary is torn in half — neither chunk holds the
    whole thought. So each chunk repeats the last N tokens of the one before it
    (say 50). The window advances by `size − overlap` tokens, not the full `size`.
-
 3. **Fingerprint each chunk, and only embed new fingerprints.** Run each chunk's
    text through a **content hash** — a short string where identical text gives an
    identical hash and any edit gives a totally different one. Keep a cache of
@@ -70,11 +68,11 @@ Take this 20-token passage (a "token" here is just a word):
 Chunk it with **size = 10, overlap = 3** (so the window advances `10 − 3 = 7`
 tokens each step). You get **3 chunks**:
 
-| chunk | tokens | text | hash (first 12) |
-| :---: | :----: | ---- | --------------- |
-| **0** | 1–10 | "Photosynthesis lets plants turn sunlight into food. Leaves capture light," | `684b617bdfeb` |
-| **1** | 8–17 | "Leaves capture light, and the plant stores energy as sugar" | `56a9944d7f6e` |
-| **2** | 15–20 | "energy as sugar for later growth." | `d76cd47c03a5` |
+| chunk | tokens | text                                                                        | hash (first 12) |
+| ----- | ------ | --------------------------------------------------------------------------- | --------------- |
+| **0** | 1–10   | "Photosynthesis lets plants turn sunlight into food. Leaves capture light," | `684b617bdfeb`  |
+| **1** | 8–17   | "Leaves capture light, and the plant stores energy as sugar"                | `56a9944d7f6e`  |
+| **2** | 15–20  | "energy as sugar for later growth."                                         | `d76cd47c03a5`  |
 
 **Why it lands this way:**
 
@@ -91,11 +89,11 @@ tokens each step). You get **3 chunks**:
 Now edit **one word** in that passage: `sugar` → `starch`. Re-chunk and compare
 hashes to the run above:
 
-| chunk | before | after | re-embed? |
-| :---: | ------ | ----- | :-------: |
-| 0 | `684b617bdfeb` | `684b617bdfeb` | **no** — identical text, cached hit |
-| 1 | `56a9944d7f6e` | `7fa23c37a158` | **yes** — text changed |
-| 2 | `d76cd47c03a5` | `235fff64892b` | **yes** — text changed |
+| chunk | before         | after          | re-embed?                           |
+| ----- | -------------- | -------------- | ----------------------------------- |
+| 0     | `684b617bdfeb` | `684b617bdfeb` | **no** — identical text, cached hit |
+| 1     | `56a9944d7f6e` | `7fa23c37a158` | **yes** — text changed              |
+| 2     | `d76cd47c03a5` | `235fff64892b` | **yes** — text changed              |
 
 **Why two chunks changed from a one-word edit:** the word `sugar` (token 17) sits
 in the **overlap region** shared by chunks 1 and 2, so editing it touches both.
@@ -129,7 +127,7 @@ once, then come back. `chunk_cli.py` will stop at the first unwritten function �
 that's your starting line.
 
 > There's **no embedding model** in this folder. The "embedder" is a stub that
-> just counts how many times it's called — because the lesson is *not calling it*
+> just counts how many times it's called — because the lesson is _not calling it_
 > when nothing changed, not recomputing vectors (you did that in Module 2).
 
 ### 2. Fill in `chunking.py`
@@ -145,7 +143,7 @@ Three functions. Each has a docstring and numbered sub-steps; delete each
   makes re-runs free.
 
 (`tokenize`, the `Chunk` type, and `chunk_document` / `chunk_corpus` are provided
-— they *call* your functions.)
+— they _call_ your functions.)
 
 **Stuck on a sub-step? Ask Claude.**
 
@@ -172,7 +170,7 @@ zero is the module.
 - `python chunk_cli.py --size 200` → more chunks or fewer? _fill in_
 - In your own words: if an editor fixes a typo in the **middle** of a long
   article, roughly how many of that article's chunks re-embed — and how many of
-  the *other 4,999 articles* do? _fill in_
+  the _other 4,999 articles_ do? _fill in_
 
 ---
 
@@ -198,7 +196,7 @@ this module maps to **two** real files, one per idea:
   `lib/instinct/search/universal/sync/chunker.ex:16`
   - **Notice:** `@default_opts [target_tokens: 500, overlap_tokens: 50]` — the
     exact 500/50 you used as defaults. A few lines up (`:5`) it also notes
-    *"Token estimation: 1 token ≈ 4 characters"* — production doesn't run a full
+    _"Token estimation: 1 token ≈ 4 characters"_ — production doesn't run a full
     tokenizer either; it **approximates** tokens (by character count) just like
     you approximated them with words. Same windowing idea, same shortcut.
 - **Content hashing** → `chunky-kong` →

@@ -1,0 +1,9 @@
+# Module 6 — Storage: Turbopuffer (satellite, standalone from the engine)
+# Reuses the engine's 5k parquet + cached embeddings from ../wikisearch/data/.
+# No embedding model here — the query is a stored article's own vector, so this
+# module never needs sentence-transformers. It only needs to read those two
+# files and talk to Turbopuffer.
+turbopuffer>=0.5
+numpy>=1.24
+pandas>=2.0
+pyarrow>=14

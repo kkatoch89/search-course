@@ -5,7 +5,7 @@
 
 **Goal:** Give the WikiSearch engine its first capability — keyword search that
 ranks Wikipedia articles by relevance with BM25.
-**Time box:** ~2–3 hours &nbsp;|&nbsp; **Time spent:** _fill in_ &nbsp;|&nbsp; **Done when:** `python bm25_cli.py "photosynthesis"` returns a ranked list with _Photosynthesis_ on top.
+**Time box:** ~2–3 hours  |  **Time spent:** _1.5h_  |  **Done when:** `python bm25_cli.py "photosynthesis"` returns a ranked list with _Photosynthesis_ on top.
 
 ---
 
@@ -29,21 +29,20 @@ best matches fast, and rank them?
 1. **Don't scan every article per query.** Build an **inverted index** once: a
    map from each word to the list of documents containing it (and how often).
    Now answering a query is "look up the query's words," not "read 5,000 docs."
-
 2. **First split text into words** — **tokenization**. `"The Red Fox!"` becomes
    `["the", "red", "fox"]`: lowercased, punctuation dropped. Query and documents
    get tokenized the same way so they can match.
-
 3. **Rank by three intuitions**, which together are **BM25**:
-   - **Term frequency (TF):** a doc that uses the query word more is probably
-     more about it — but with *diminishing returns* (the 10th "fox" adds less
-     than the 2nd).
-   - **Inverse document frequency (IDF):** a word in *few* documents is more
-     informative. Matching `photosynthesis` (rare) says more than matching
-     `the` (everywhere), so rare words are weighted higher.
-   - **Length normalization:** a long document naturally repeats words, so BM25
-     discounts length — a short doc that's squarely on-topic beats a long doc
-     that merely mentions the word in passing.
+
+- **Term frequency (TF):** a doc that uses the query word more is probably
+  more about it — but with _diminishing returns_ (the 10th "fox" adds less
+  than the 2nd).
+- **Inverse document frequency (IDF):** a word in _few_ documents is more
+  informative. Matching `photosynthesis` (rare) says more than matching
+  `the` (everywhere), so rare words are weighted higher.
+- **Length normalization:** a long document naturally repeats words, so BM25
+  discounts length — a short doc that's squarely on-topic beats a long doc
+  that merely mentions the word in passing.
 
 That's it. BM25 turns those three signals into one relevance score per document,
 and you sort by it.
@@ -52,36 +51,36 @@ and you sort by it.
 
 ## Worked example (read-only)
 
-Tiny corpus of four documents. Query: **`red fox`**. Average length `avgdl`
+Tiny corpus of four documents. Query: `red fox`. Average length `avgdl`
 across these four docs is **8.5 tokens**.
 
 The two query words differ in how rare they are:
 
 | query word | in how many docs (document frequency) | so its IDF weight is… |
-| ---------- | :-----------------------------------: | --------------------- |
+| ---------- | ------------------------------------- | --------------------- |
 | `red`      | 2 of 4                                | **higher** (rarer)    |
 | `fox`      | 3 of 4                                | lower (more common)   |
 
 Now the documents and their driving signals:
 
-| doc | text | length | tf(`red`) | tf(`fox`) | **BM25 score** |
-| :-: | ---- | :----: | :-------: | :-------: | :------------: |
-| **A** | "The red fox." | 3 | 1 | 1 | **1.428** |
-| **B** | "The red fox is a wild animal that lives in the forest and hunts small prey at night." | 18 | 1 | 1 | **0.720** |
-| **C** | "A fox, a fox, a clever fox." | 7 | 0 | 3 | **0.583** |
-| **D** | "The dog is a loyal pet." | 6 | 0 | 0 | **0.000** |
+| doc   | text                                                                                   | length | tf(`red`) | tf(`fox`) | **BM25 score** |
+| ----- | -------------------------------------------------------------------------------------- | ------ | --------- | --------- | -------------- |
+| **A** | "The red fox."                                                                         | 3      | 1         | 1         | **1.428**      |
+| **B** | "The red fox is a wild animal that lives in the forest and hunts small prey at night." | 18     | 1         | 1         | **0.720**      |
+| **C** | "A fox, a fox, a clever fox."                                                          | 7      | 0         | 3         | **0.583**      |
+| **D** | "The dog is a loyal pet."                                                              | 6      | 0         | 0         | **0.000**      |
 
-**Ranking: A → B → C.** (D is *dropped* — see why below.)
+**Ranking: A → B → C.** (D is _dropped_ — see why below.)
 
 **Why each lands where it does:**
 
 - **A is #1.** It has both query words and is extremely short. Length
-  normalization rewards a doc that is *entirely* about the query.
+  normalization rewards a doc that is _entirely_ about the query.
 - **B is #2.** Identical query-word counts to A (`red`×1, `fox`×1) — but it's 18
-  tokens vs. A's 3. *Nothing differs except length,* so this pair isolates length
+  tokens vs. A's 3. _Nothing differs except length,_ so this pair isolates length
   normalization: the longer doc scores lower.
-- **C is #3.** It says `fox` three times but never `red`. Piling up a *common*
-  word (low IDF) can't out-score having the *rarer* word `red` (high IDF) that
+- **C is #3.** It says `fox` three times but never `red`. Piling up a _common_
+  word (low IDF) can't out-score having the _rarer_ word `red` (high IDF) that
   both A and B carry. IDF beats raw repetition here.
 - **D is dropped.** It contains neither query word, so its score is exactly 0.
   Zero-score docs aren't "ranked last" — they're not results at all.
@@ -147,7 +146,7 @@ Run a couple of queries and jot what you notice:
 
 - A precise, rare word (e.g. `photosynthesis`) → _result observation:_
 - A short common word or a two-word phrase (try `red fox`) → _result
-  observation:_ &nbsp; _(Hint: does the animal win? Why might a person named Fox
+  observation:_   _(Hint: does the animal win? Why might a person named Fox
   or an article full of "red" out-rank it? Keep this in mind for Module 2.)_
 
 ### 5. Tag it

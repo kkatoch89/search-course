@@ -3,20 +3,20 @@
 > **(read-only)** sections are for understanding; **Your turn** is what you
 > build. Blanks marked _fill in_ are yours.
 
-**Goal:** Give WikiSearch a second way to find articles — by *meaning*, not just
+**Goal:** Give WikiSearch a second way to find articles — by _meaning_, not just
 shared words, so a query and an article can match even with no words in common.
-**Time box:** ~2–3 hours &nbsp;|&nbsp; **Time spent:** _fill in_ &nbsp;|&nbsp; **Done when:** `python vector_cli.py "a big animal with a trunk"` returns _Elephant_ on top — and the word "elephant" is nowhere in the query.
+**Time box:** ~2–3 hours &nbsp;|&nbsp; **Time spent:** 2h &nbsp;|&nbsp; **Done when:** `python vector_cli.py "a big animal with a trunk"` returns _Elephant_ on top — and the word "elephant" is nowhere in the query.
 
 ---
 
 ## Where this fits (builds on Module 1)
 
-- **Module 1 gave you:** keyword search (BM25). It ranks by *shared words* — it
+- **Module 1 gave you:** keyword search (BM25). It ranks by _shared words_ — it
   can only find an article that literally contains the query's terms, and it
   gets fooled by words with two meanings (the `red fox` / homonym problem you
   saw at the end of Module 1).
 - **This module adds:** meaning-based retrieval. Turn text into a vector and
-  rank by how *close in meaning* the query and each document are — so "a big
+  rank by how _close in meaning_ the query and each document are — so "a big
   animal with a trunk" finds _Elephant_ even though the article never says
   "trunk," and "trunk" doesn't drag in tree trunks or car trunks.
 - **New words:** embedding, dimension, vector, cosine similarity, nearest
@@ -28,19 +28,19 @@ shared words, so a query and an article can match even with no words in common.
 
 1. **Turn text into a vector — an "embedding."** A small model
    (`all-MiniLM-L6-v2`, running locally on your laptop) reads a piece of text
-   and outputs a list of **384 numbers** that captures its *meaning*. Texts
+   and outputs a list of **384 numbers** that captures its _meaning_. Texts
    about similar things get vectors that point in similar directions. You don't
    compute these — the model does.
 
 2. **Rank by cosine similarity.** To compare two vectors, measure the **angle**
    between them. The cosine of that angle is 1 when they point the same way
    (same meaning), 0 when unrelated, −1 when opposite. Because it's about
-   *direction, not length*, a long article and a short query about the same
+   _direction, not length_, a long article and a short query about the same
    topic still score as similar.
 
 3. **This matches on meaning, not words.** That's the whole point. Keyword
    search needs the query's exact words to appear. Vector search finds the
-   article whose *meaning* is closest — even with zero shared words — and isn't
+   article whose _meaning_ is closest — even with zero shared words — and isn't
    tricked when a word (like "trunk") has more than one meaning.
 
 ---
@@ -51,42 +51,42 @@ Same four-document toy corpus, one query: **`a big animal with a trunk`**.
 Notice the _Elephant_ document deliberately never uses the word "trunk" — it
 says "long nose and tusks."
 
-| doc | text |
-| :-: | ---- |
-| **Elephant** | "An elephant is an enormous mammal known for its long nose and tusks." |
-| **Tree** | "A tree is a tall plant with a woody trunk, branches, and green leaves." |
-| **Car** | "The trunk of a car is a compartment at the back for storing luggage." |
-| **Ocean** | "The ocean is a vast body of salt water covering most of the Earth." |
+|     doc      | text                                                                     |
+| :----------: | ------------------------------------------------------------------------ |
+| **Elephant** | "An elephant is an enormous mammal known for its long nose and tusks."   |
+|   **Tree**   | "A tree is a tall plant with a woody trunk, branches, and green leaves." |
+|   **Car**    | "The trunk of a car is a compartment at the back for storing luggage."   |
+|  **Ocean**   | "The ocean is a vast body of salt water covering most of the Earth."     |
 
 **How Module 1's BM25 ranks them** (keyword — matches shared words):
 
-| rank | doc | score | contains "trunk"? |
-| :--: | --- | :---: | :---------------: |
-| 1 | Tree | 3.001 | ✅ (tree trunk) |
-| 2 | Car | 1.665 | ✅ (car trunk) |
-| 3 | Ocean | 0.708 | ❌ (just "a", "with") |
-| 4 | **Elephant** | **0.000** | ❌ |
+| rank | doc          |   score   |   contains "trunk"?   |
+| :--: | ------------ | :-------: | :-------------------: |
+|  1   | Tree         |   3.001   |    ✅ (tree trunk)    |
+|  2   | Car          |   1.665   |    ✅ (car trunk)     |
+|  3   | Ocean        |   0.708   | ❌ (just "a", "with") |
+|  4   | **Elephant** | **0.000** |          ❌           |
 
 **How this module's vector search ranks them** (meaning — cosine similarity):
 
-| rank | doc | cosine |
-| :--: | --- | :----: |
-| 1 | **Elephant** | **0.514** |
-| 2 | Car | 0.451 |
-| 3 | Tree | 0.358 |
-| 4 | Ocean | 0.053 |
+| rank | doc          |  cosine   |
+| :--: | ------------ | :-------: |
+|  1   | **Elephant** | **0.514** |
+|  2   | Car          |   0.451   |
+|  3   | Tree         |   0.358   |
+|  4   | Ocean        |   0.053   |
 
 **Why the two disagree so sharply:**
 
 - **BM25 puts _Elephant_ dead last (0.000).** The article never contains the
   word "trunk," and keyword search can only match words that are literally
-  there. So the one right answer scores *zero* — it isn't a weak result, it's
+  there. So the one right answer scores _zero_ — it isn't a weak result, it's
   not a result at all.
 - **BM25 is fooled by "trunk."** It ranks _Tree_ and _Car_ on top because they
   contain the word — but a tree trunk and a car trunk have nothing to do with
   the query. This is exactly the homonym trap from Module 1.
 - **Vector search puts _Elephant_ first (0.514).** "A big animal with a trunk"
-  *means* an elephant, and the embedding captures that meaning regardless of the
+  _means_ an elephant, and the embedding captures that meaning regardless of the
   exact words. _Ocean_ falls to near-zero because it's unrelated in meaning.
 
 (These numbers are real — produced by embedding this corpus with
@@ -193,7 +193,7 @@ list of builders:
 - **File:** `chunky-kong` → `lib/instinct/search/universal/clients/turbopuffer/ranking.ex:42`
 - **Notice:** `def ann(vector), do: ["vector", "ANN", vector]`. Where Module 1's
   `bm25` builder emitted a keyword clause, this emits a **vector** clause:
-  `["vector", "ANN", query_vector]`. `ANN` = *approximate* nearest neighbor —
+  `["vector", "ANN", query_vector]`. `ANN` = _approximate_ nearest neighbor —
   production doesn't score all 5k the exact way you did; at scale it uses an
   index that finds the nearest vectors approximately, trading a little recall
   for a lot of speed. Same idea as your `cosine_similarity`, handed to the
